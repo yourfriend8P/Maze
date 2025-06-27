@@ -1,0 +1,2 @@
+﻿  MazeSolver.cpp
+C:\Users\praba\source\repos\maze\maze\MazeSolver.cpp(57,1): error C4716: 'solveMazeBFS': must return a value
