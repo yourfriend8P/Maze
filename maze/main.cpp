@@ -1,9 +1,6 @@
-﻿#define STB_EASY_FONT_IMPLEMENTATION
-#include "stb_easy_font.h"
-
+﻿#include "MazeData.h"
 #include <GLFW/glfw3.h>
 #include <iostream>
-#include "MazeData.h"
 
 #define START_X 1
 #define START_Y 1
@@ -14,33 +11,17 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
-void generateMazeDFS(int x, int y); // your function
-bool solveMazeBFS(int startX, int startY, int endX, int endY); // your function
+void generateMazeDFS(int x, int y); // Forward declaration
+bool solveMazeBFS(int startX, int startY, int endX, int endY); // Forward declaration
 
-bool bfsSolved = false;
-
-void renderText(float x, float y, const char* text) {
-    char buffer[99999]; // large buffer for text vertices
-    int num_quads = stb_easy_font_print(x, y, (char*)text, NULL, buffer, sizeof(buffer));
-
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glVertexPointer(2, GL_FLOAT, 16, buffer);
-    glDrawArrays(GL_QUADS, 0, num_quads * 4);
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glPixelZoom(1.0f, -1.0f);
-    glRasterPos2f(x, -y);  // Invert Y position
-
-}
+bool mazeSolved = false;
+bool keyPressed = false;
 
 void drawCell(int row, int col, float r, float g, float b) {
-    float cellSize = 0.0475f; // fits nicely into [-1, 1] range
-    // Add vertical and horizontal padding
-    float verticalPadding = 0.05f; // Adjust this to increase/decrease top-bottom space
-    float horizontalPadding = 0.0f; // Optional: Add if you want space on sides too
-
-    float x = -1.0f + horizontalPadding + col * cellSize;
+    float cellSize = 0.0475f;
+    float verticalPadding = 0.05f;
+    float x = -1.0f + col * cellSize;
     float y = 1.0f - verticalPadding - row * cellSize;
-
 
     glColor3f(r, g, b);
     glBegin(GL_QUADS);
@@ -86,57 +67,46 @@ int main() {
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-    // Initialize maze
+    // Initialize and generate maze
     for (int y = 0; y < ROWS; ++y)
         for (int x = 0; x < COLS; ++x)
             maze[y][x] = WALL;
 
-    generateMazeDFS(1, 1);
-    //solveMazeBFS(START_X, START_Y, END_X, END_Y);
-    maze[START_Y][START_X] = END;
-    maze[END_Y][END_X] = START;
-    solveMazeBFS(START_X, START_Y, END_X, END_Y);
+    generateMazeDFS(START_X, START_Y);
+    maze[START_Y][START_X] = PATH; // Important for solving
+    maze[END_Y][END_X] = PATH;
 
-    // MAIN LOOP
     while (!glfwWindowShouldClose(window)) {
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-       /* if (!bfsSolved && glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) {
-            solveMazeBFS(START_X, START_Y, END_X, END_Y);
-            bfsSolved = true;
-        }*/
+        // Trigger solving only once when Enter key is pressed
+        if (!mazeSolved && glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS) {
+            if (!keyPressed) {
+                keyPressed = true;
+                mazeSolved = solveMazeBFS(START_X, START_Y, END_X, END_Y);
+                // Now mark Start and End visually after solving
+                maze[START_Y][START_X] = START;
+                maze[END_Y][END_X] = END;
+            }
+        }
 
-        // Default projection for maze
+        if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_RELEASE) {
+            keyPressed = false;
+        }
+
+        // Set up projection
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
-        glOrtho(-1, 1, -1, 1, -1, 1);  // ← Use your original projection
+        glOrtho(-1, 1, -1, 1, -1, 1);
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
 
         drawMaze();
 
-        // Switch projection for text only
-        glMatrixMode(GL_PROJECTION);
-        glPushMatrix();
-        glLoadIdentity();
-        glOrtho(0, 800, 800, 0, -1, 1); // ← Top-left origin for text
-        glMatrixMode(GL_MODELVIEW);
-        glPushMatrix();
-        glLoadIdentity();
-
-        glColor3f(1.0f, 0.0f, 0.0f); // black text
-        renderText(20, 25, "Press 'X' for solution");
-
-        glPopMatrix(); // restore modelview
-        glMatrixMode(GL_PROJECTION);
-        glPopMatrix(); // restore projection
-        glMatrixMode(GL_MODELVIEW); // restore state
-
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
 
     glfwDestroyWindow(window);
     glfwTerminate();

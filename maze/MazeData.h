@@ -9,8 +9,8 @@ extern int dy[4];
 extern int maze[ROWS][COLS];
 extern bool visited[ROWS][COLS];
 
-//int dx[4] = { 0, 1, 0, -1 };
-//int dy[4] = { -1, 0, 1, 0 };
+//const int dx[4] = { 0, 1, 0, -1 };
+//const int dy[4] = { -1, 0, 1, 0 };
 //int maze[ROWS][COLS] = { 0 };
 //bool visited[ROWS][COLS] = { false };
 

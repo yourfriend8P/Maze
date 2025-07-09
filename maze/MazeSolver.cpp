@@ -31,30 +31,16 @@ bool solveMazeBFS(int startX, int startY, int endX, int endY) {
     }
 
     auto p = std::make_pair(endX, endY);
+    if (parent.find(p) == parent.end()) {
+        std::cout << "No path found!\n";
+        return false;
+    }
+
     while (p != std::make_pair(startX, startY)) {
         maze[p.second][p.first] = SOLUTION;
         p = parent[p];
     }
 
-    //auto p = std::make_pair(endX, endY);
-
-    //if (parent.find(p) == parent.end()) {
-    //    std::cout << "No path found!\n";
-    //    return false;
-    //}
-    //std::cout << "Path found!\n";
-
-    //// Reconstruct path
-    //while (p != std::make_pair(startX, startY)) {
-    //    maze[p.second][p.first] = SOLUTION;
-    //    p = parent[p];
-    //}
-    //maze[startY][startX] = SOLUTION;
-    //return true;
-
-    //maze[startY][startX] = SOLUTION;
-    //return true;
+    maze[startY][startX] = SOLUTION;
+    return true;
 }
-
-
-
